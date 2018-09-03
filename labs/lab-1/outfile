@@ -1,0 +1,51 @@
+***** PART 1 *****
+******************
+enter main
+&argc=ffe9e320 argv=ffe9e3b4 env=ffe9e3c8
+&a=ffe9e2d4 &b=ffe9e2d8 &c=ffe9e2dc
+***** arguments sent to main *****
+***** argc: 4 *****
+***** argv: ./a.out one two three *****
+enter A
+&d=ffe9e290 &e=ffe9e294 &f=ffe9e298
+&d=0xffe9e290 &e=0xffe9e294 &f=0xffe9e298
+enter B
+&g=ffe9e260 &h=ffe9e264 &i=ffe9e268
+&g=0xffe9e260 &h=0xffe9e264 &i=0xffe9e268
+enter C
+&u=ffe9e224 &v=ffe9e228 &w=ffe9e22c &i=ffe9e230 p=804910c
+&u=0xffe9e224 &v=0xffe9e228 &w=0xffe9e22c &i=0xffe9e230 p=0x804910c
+***** stack frame link list *****
+ffe9e248 -> ffe9e278 -> ffe9e2a8 -> ffe9e308 -> 0
+*****
+***** stack contents *****
+ffe9e234 (value: -1449420) -> ffe9e238 (value: 1) -> ffe9e23c (value: -1444775936) -> ffe9e240 (value: -135176192) -> ffe9e244 (value: -135176192) -> ffe9e248 (value: -1449352) -> ffe9e24c (value: 134515126) -> ffe9e250 (value: 7) -> ffe9e254 (value: 8) -> ffe9e258 (value: -1449372) -> ffe9e25c (value: -1449368) -> ffe9e260 (value: 7) -> ffe9e264 (value: 8) -> ffe9e268 (value: 9) -> ffe9e26c (value: -1444775936) -> ffe9e270 (value: -135176192) -> ffe9e274 (value: -135176192) -> ffe9e278 (value: -1449304) -> ffe9e27c (value: 134514967) -> ffe9e280 (value: 4) -> ffe9e284 (value: 5) -> ffe9e288 (value: -1449324) -> ffe9e28c (value: -1449320) -> ffe9e290 (value: 4) -> ffe9e294 (value: 5) -> ffe9e298 (value: 6) -> ffe9e29c (value: -1444775936) -> ffe9e2a0 (value: -135176192) -> ffe9e2a4 (value: -135176192) -> ffe9e2a8 (value: -1449208) -> ffe9e2ac (value: 134514170) -> ffe9e2b0 (value: 1) -> ffe9e2b4 (value: 2) -> ffe9e2b8 (value: -1449256) -> ffe9e2bc (value: -1449252) -> ffe9e2c0 (value: -1) -> ffe9e2c4 (value: 47) -> ffe9e2c8 (value: -1449016) -> ffe9e2cc (value: -1449036) -> ffe9e2d0 (value: 32768) -> ffe9e2d4 (value: 1) -> ffe9e2d8 (value: 2) -> ffe9e2dc (value: 3) -> ffe9e2e0 (value: 4) -> ffe9e2e4 (value: 7) -> ffe9e2e8 (value: -136762800) -> ffe9e2ec (value: 134516299) -> ffe9e2f0 (value: 4) -> ffe9e2f4 (value: -1449036) -> ffe9e2f8 (value: -1449016) -> ffe9e2fc (value: -1444775936) -> ffe9e300 (value: -1449184) -> ffe9e304 (value: 0) -> ffe9e308 (value: 0) -> ffe9e30c (value: -136853961) -> ffe9e310 (value: -135176192) -> ffe9e314 (value: -135176192) -> ffe9e318 (value: 0) -> ffe9e31c (value: -136853961) -> ffe9e320 (value: 4) -> ffe9e324 (value: -1449036) -> ffe9e328 (value: -1449016) -> ffe9e32c (value: 0) -> ffe9e330 (value: 0) -> ffe9e334 (value: 0) -> ffe9e338 (value: -135176192) -> ffe9e33c (value: -134833148) -> ffe9e340 (value: -134836224) -> ffe9e344 (value: 0) -> ffe9e348 (value: -135176192) -> ffe9e34c (value: -135176192) -> ffe9e350 (value: 0) -> ffe9e354 (value: 18705128) -> ffe9e358 (value: 2102445304) -> ffe9e35c (value: 0) -> ffe9e360 (value: 0) -> ffe9e364 (value: 0) -> ffe9e368 (value: 4) -> ffe9e36c (value: 134513616) -> ffe9e370 (value: 0) -> ffe9e374 (value: -134897648) -> ffe9e378 (value: -134920064) -> ffe9e37c (value: -134836224) -> ffe9e380 (value: 4) -> ffe9e384 (value: 134513616) -> ffe9e388 (value: 0) -> ffe9e38c (value: 134513649) -> ffe9e390 (value: 134513867) -> ffe9e394 (value: 4) -> ffe9e398 (value: -1449036) -> ffe9e39c (value: 134516224) -> ffe9e3a0 (value: 134516320) -> ffe9e3a4 (value: -134920064) -> ffe9e3a8 (value: -1449044) -> ffe9e3ac (value: -134833896) -> ffe9e3b0 (value: 4) -> ffe9e3b4 (value: -1445206) -> ffe9e3b8 (value: -1445198) -> ffe9e3bc (value: -1445194) -> ffe9e3c0 (value: -1445190) -> ffe9e3c4 (value: 0) -> ffe9e3c8 (value: -1445184) -> ffe9e3cc (value: -1445173) -> ffe9e3d0 (value: -1445155) -> ffe9e3d4 (value: -1445133) -> ffe9e3d8 (value: -1445084) -> ffe9e3dc (value: -1445034) -> ffe9e3e0 (value: -1445018) -> ffe9e3e4 (value: -1444998) -> ffe9e3e8 (value: -1444981) -> ffe9e3ec (value: -1444946) -> ffe9e3f0 (value: -1444928) -> ffe9e3f4 (value: -1444860) -> ffe9e3f8 (value: -1444837) -> ffe9e3fc (value: -1444792) -> ffe9e400 (value: -1444781) -> ffe9e404 (value: -1443365) -> ffe9e408 (value: -1443346) -> ffe9e40c (value: -1443288) -> ffe9e410 (value: -1443236) -> ffe9e414 (value: -1443195) -> ffe9e418 (value: -1443144) -> ffe9e41c (value: -1443076) -> ffe9e420 (value: -1442875) -> ffe9e424 (value: -1442852) -> ffe9e428 (value: -1442834) -> ffe9e42c (value: -1442801) -> ffe9e430 (value: -1442780) -> ffe9e434 -> ... -> 0
+*****
+exit B
+exit A
+***** PART 2 *****
+******************
+***** testing prints *****
+helasdfjdslf my name kyler == helasdfjdslf my name kyler
+***** testing printu *****
+234223 == 234223
+0 == 0
+***** testing printd *****
+234223 == 234223
+0 == 0
+-12398 == -12398
+***** testing printx *****
+0x392ef == 0x392ef
+0x0 == 0x0
+***** testing printo *****
+0711357 == 0711357
+00 == 00
+***** testing myprintf *****
+test_str == test_str
+hex: 0x1 oct: 02 u32: 3
+==
+hex: 0x1 oct: 02 u32: 3
+l o l == l o l
+lol == lol
+char == char
+exit main
