@@ -1,0 +1,11 @@
+#ifndef PROGRAM_CONSTANTS
+#define PROGRAM_CONSTANTS
+
+#define NUM_CMDS 11
+#define MAX_CMD_LEN 16
+#define MAX_PATH_LEN 64
+#define MAX_INPUT_LEN 128
+#define INVALID_INDEX -1
+#define DEBUG_MODE 1
+
+#endif
