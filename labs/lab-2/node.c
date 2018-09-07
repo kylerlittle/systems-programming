@@ -35,3 +35,20 @@ int insert_end(NODE **front, NODE *node) {
         p->sibling = node;
     }
 }
+
+int remove_from_list(NODE *node) {
+    NODE *parent = node->parent, *prev = NULL, *curr = NULL;
+    curr = parent->child;
+
+    /* Note: before this function is called, it's guaranteed that node is in the list. */
+    while (curr != node) {
+        prev = curr;
+        curr = curr->sibling;
+    }
+    if (prev) {
+        prev->sibling = curr->sibling;
+    } else {
+        parent->child = curr->sibling;
+    }
+    delete_node(curr);
+}

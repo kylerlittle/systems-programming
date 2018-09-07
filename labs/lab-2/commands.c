@@ -68,6 +68,9 @@ int clear_tok_list(void) {
 NODE *search_for_child(NODE *parent, char *name) {
     NODE *list = parent->child;
 
+    if (!strncmp(name,  "..", 2)) return parent->parent;
+    else if (!strncmp(name,  ".", 1)) return parent;
+
     while (list) {
         if (!strcmp(list->name, name)) {
             if (DEBUG_MODE) printf("***ASSERT*** %s == %s\n", list->name, name);
@@ -80,10 +83,22 @@ NODE *search_for_child(NODE *parent, char *name) {
 }
 
 NODE *path_to_node(char *pathname) {
-    // if (!strcmp(pathname, ".")) {
-
+    /* This will temporarily work... but it won't work for paths like "../../.." for example.
+    Eventually, the checks for '.' and '..' should be done in search_for_child. */
+    // char _path[MAX_PATH_LEN] = "";
+    // if (!strncmp(pathname, "..", 2)) {
+    //     strcpy(_path, &pathname[2]);
+    //     start = cwd->parent;
+    // } else if (!strncmp(pathname, ".", 1)) {
+    //     strcpy(_path, &pathname[1]);
+    //     start = cwd;
+    // } else {
+    //     strcpy(_path, pathname);
+    //     start = (pathname[0] == '/') ? root : cwd;
     // }
+
     start = (pathname[0] == '/') ? root : cwd;
+    // if (DEBUG_MODE) printf("path... %s\n", _path);
     NODE *p = start;
 
     int n = tokenize(pathname), i;
@@ -106,16 +121,17 @@ int find_cmd(char *cmd) {
     return INVALID_INDEX;
 }
 
-int mkdir(char path[]) {
+int mkdir(char *path) {
     int len = strlen(path), i;
-    char dirname[MAX_PATH_LEN], basename[MAX_PATH_LEN], err_msg[MAX_ERROR_MSG_LEN];
+    char dirname[MAX_PATH_LEN] = "", basename[MAX_PATH_LEN] = "", err_msg[MAX_ERROR_MSG_LEN] = "";
     bool err = false;
 
     /* Break path into absolute & relative bits. */
-    for (i = len - 1; path[i] != '/'; --i);
+    for (i = len - 1; path[i] != '/' && i>=0; --i);
     strcpy(basename, &path[i+1]);
-    strncpy(dirname, path, i);
-    dirname[i] = '\0';
+    int correct_i = i < 0 ? 0 : i;
+    strncpy(dirname, path, correct_i);
+    dirname[correct_i] = '\0';
     if (DEBUG_MODE) printf("path: %s\tdirname: %s\t basename: %s\n", path, dirname, basename);
 
     /* Search for dirname node. */
@@ -131,6 +147,7 @@ int mkdir(char path[]) {
                 strcpy(err_msg, "File exists");
             } else {
                 p = create_node(basename, 'd');
+                p->parent = d;
                 /* Now, insert p at the end of linked list which starts at d->child. Pass in double ptr. */
                 insert_end(&d->child, p);
             }
@@ -146,7 +163,29 @@ int mkdir(char path[]) {
 }
 
 int rmdir(char* path) {
-    printf("path: %s\n", path);
+    NODE *p = path_to_node(path);
+    char err_msg[MAX_ERROR_MSG_LEN] = "";
+    bool err = false;
+    if (p) {
+        if (p->type != 'd') {
+            err = true;
+            strcpy(err_msg, "Not a directory");
+        } else {
+            if (p->child) {
+                err = true;
+                strcpy(err_msg, "Directory not empty");
+            } else {
+                remove_from_list(p);
+            }
+        }
+    } else {
+        err = true;
+        strcpy(err_msg, "No such file or directory");
+    }
+
+    if (err)
+        printf("mkdir: cannot create directory '%s': %s\n", path, err_msg);
+        return false;
 }
 
 int ls(char* path) {
@@ -155,7 +194,7 @@ int ls(char* path) {
     /* Now look at p's children. Add extra if statement to avoid printing 
     newline when p has no children. */
     p = p->child;
-    if (p) {
+    if (p   ) {
         while (p) {
             printf("[%c]%s\t", p->type, p->name);
             p = p->sibling;

@@ -14,8 +14,7 @@ void run_file_system_simulator(void) {
   while (strcmp(_exit_cmd, _cmd)) {
     /* Snag user input. */
     get_input(_cmd, _path);
-    if (DEBUG_MODE)
-      printf("cmd: %s\tpath: %s\n", _cmd, _path);
+    if (DEBUG_MODE) printf("cmd: %s\tpath: %s\n", _cmd, _path);
   
     /* Find the index of the command in the table. */
     index = find_cmd(_cmd);
@@ -29,11 +28,13 @@ void run_file_system_simulator(void) {
 }
 
 void get_input(char *cmd, char *path) {
-  char line[MAX_INPUT_LEN];
+  char line[MAX_INPUT_LEN]; //, _cmd[MAX_CMD_LEN], _path[MAX_PATH_LEN];
   printf(">> ");
   fgets(line, MAX_INPUT_LEN, stdin);
   line[strlen(line) - 1] = '\0';
   sscanf(line, "%s %s", cmd, path);
+  if (!strcmp(cmd, line)) strcpy(path, "");
+  //else strcpy(cmd, _cmd); strcpy(path, _path); // possibly remove this...
 }
 
 int is_valid_cmd(int index) {
