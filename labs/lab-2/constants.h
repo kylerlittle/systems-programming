@@ -7,5 +7,7 @@
 #define MAX_INPUT_LEN 128
 #define INVALID_INDEX -1
 #define DEBUG_MODE 1
+#define FAIL 0
+#define MAX_ERROR_MSG_LEN 128
 
 #endif

@@ -2,24 +2,29 @@
 
 void run_file_system_simulator(void) {
   int index;
-  char cmd[MAX_CMD_LEN], path[MAX_PATH_LEN], exit_cmd[MAX_CMD_LEN];
+  char _cmd[MAX_CMD_LEN], _path[MAX_PATH_LEN], _exit_cmd[MAX_CMD_LEN];
 
   /* The last command is the exit command. */
-  strcpy(exit_cmd, cmds[NUM_CMDS - 1]);
+  strcpy(_exit_cmd, cmds[NUM_CMDS - 1]);
+
+  /* Initialize tree. */
+  init();
 
   /* Loop while the command entered isn't the exit command. */
-  while (strcmp(exit_cmd, cmd)) {
+  while (strcmp(_exit_cmd, _cmd)) {
     /* Snag user input. */
-    get_input(cmd, path);
-
+    get_input(_cmd, _path);
+    if (DEBUG_MODE)
+      printf("cmd: %s\tpath: %s\n", _cmd, _path);
+  
     /* Find the index of the command in the table. */
-    index = find_cmd(cmd);
+    index = find_cmd(_cmd);
 
     /* Execute command if valid. Otherwise, print error message. */
     if (is_valid_cmd(index))
-      cmd_ptrs[index](cmd);
+      cmd_ptrs[index](_path);
     else
-      printf("%s: command not found\n", cmd);
+      printf("%s: command not found\n", _cmd);
   }
 }
 
