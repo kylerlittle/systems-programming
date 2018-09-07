@@ -34,4 +34,7 @@ int save(char*);
 int menu(char*);
 int quit(char*);
 
+int _mk(char *path, char type, char *mk_cmd);
+int _rm(char *path, char type, char *mk_cmd);
+
 #endif
