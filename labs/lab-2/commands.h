@@ -11,6 +11,8 @@ extern int (*cmd_ptrs[])(char*);
 extern char *cmds[];
 NODE *root, *cwd, *start;
 extern char *tok_list[];
+FILE *fp;
+extern bool is_saving;
 
 /* File tree functions. */
 int init(void);
@@ -36,5 +38,6 @@ int quit(char*);
 
 int _mk(char *path, char type, char *mk_cmd);
 int _rm(char *path, char type, char *mk_cmd);
+int preorder_to_file(NODE *tree);
 
 #endif

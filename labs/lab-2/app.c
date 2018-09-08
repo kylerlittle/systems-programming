@@ -28,13 +28,12 @@ void run_file_system_simulator(void) {
 }
 
 void get_input(char *cmd, char *path) {
-  char line[MAX_INPUT_LEN]; //, _cmd[MAX_CMD_LEN], _path[MAX_PATH_LEN];
+  char line[MAX_INPUT_LEN];
   printf(">> ");
   fgets(line, MAX_INPUT_LEN, stdin);
   line[strlen(line) - 1] = '\0';
   sscanf(line, "%s %s", cmd, path);
   if (!strcmp(cmd, line)) strcpy(path, "");
-  //else strcpy(cmd, _cmd); strcpy(path, _path); // possibly remove this...
 }
 
 int is_valid_cmd(int index) {

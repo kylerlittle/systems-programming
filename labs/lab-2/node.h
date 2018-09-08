@@ -16,6 +16,7 @@ NODE *create_node(char *name, char type);
 int delete_node(NODE *node);
 int kill_tree(NODE *top);
 int insert_end(NODE **front, NODE *node);
-int remove_from_list(   NODE *node);
+int remove_from_list(NODE *node);
+
 
 #endif
