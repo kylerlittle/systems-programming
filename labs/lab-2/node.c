@@ -45,6 +45,7 @@ int remove_from_list(NODE *node) {
         prev = curr;
         curr = curr->sibling;
     }
+    /* If prev is null, loop was never entered (i.e. node at front of list). */
     if (prev) {
         prev->sibling = curr->sibling;
     } else {

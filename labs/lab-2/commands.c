@@ -13,7 +13,7 @@ char *cmds[] = {"mkdir", "rmdir", "ls", "cd", "pwd",
 NODE *root = NULL, *cwd = NULL, *start = NULL;
 char *tok_list[MAX_INPUT_LEN] = {NULL};
 FILE *fp = NULL;
-bool is_saving = false;
+bool is_saving = false;  // this global bool allows us to reuse pwd code
 
 int init(void) {
     root = cwd = start = create_node("/", 'd');
@@ -112,6 +112,7 @@ int ls(char* path) {
 }
 
 int cd(char* path) {
+    if (!strcmp(path, "")) cwd = root;
     NODE* p = path_to_node(path);
     if (p) {
         if (p->type == 'd') cwd = p;
@@ -202,7 +203,9 @@ int _mk(char *path, char type, char *mk_cmd) {
     char dirname[MAX_PATH_LEN] = "", basename[MAX_PATH_LEN] = "", err_msg[MAX_ERROR_MSG_LEN] = "";
     bool err = false;
 
-    /* Break path into absolute & relative bits. */
+    /* Break path into absolute & relative bits.
+       LOL. Just noticed there is a c lib function to do this.
+       Oh well. I guess I did it myself. */
     for (i = len - 1; path[i] != '/' && i>=0; --i);
     strcpy(basename, &path[i+1]);
     int correct_i = i < 0 ? 0 : i;
@@ -223,7 +226,7 @@ int _mk(char *path, char type, char *mk_cmd) {
                 strcpy(err_msg, "File exists");
             } else {
                 p = create_node(basename, type);
-                p->parent = d;
+                p->parent = d;  // REMEMBER WHO YOUR PARENT IS!
                 /* Now, insert p at the end of linked list which starts at d->child. Pass in double ptr. */
                 insert_end(&d->child, p);
             }
