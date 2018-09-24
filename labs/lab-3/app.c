@@ -1,6 +1,6 @@
 #include "app.h"
 
-void run_sh_simulator(void) {
+void run_sh_simulator(char* envp[]) {
     char _input_line[MAX_INPUT_LEN], *_args[MAX_ARGS] = {NULL}, *tmp;
 
     /* Give first element a dummy value. */
@@ -11,7 +11,8 @@ void run_sh_simulator(void) {
     while (strcmp(_args[0], "exit")) {
         get_input(_input_line);
         if (strlen(_input_line) != 0) {
-            int n = tokenize(_args, _input_line), i;
+            int n = tokenize(_args, _input_line);
+            execute_cmd(n, _args, envp);
         }
     }
     /* Before exiting, make sure to clear token list. */
@@ -47,16 +48,7 @@ int clear_tok_list(char *tok_list[]) {
     int i = 0;
     while (tok_list[i]) {
         free(tok_list[i]);
-        ++i;
+        tok_list[i++] = NULL;
     }
 }
 
-int return_fork_code(int pid) {
-    if (pid < 0) {
-        return ERROR_CODE;
-    } else if (pid == 0) {
-        return CHILD_PROC;
-    } else {
-        return PARENT_PROC;
-    }
-}
