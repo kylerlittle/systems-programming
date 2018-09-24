@@ -1,10 +1,5 @@
 #include "app.h"
 
-/*
-A few problems...
-1. empty string returns seg fault
-*/
-
 void run_sh_simulator(void) {
     char _input_line[MAX_INPUT_LEN], *_args[MAX_ARGS] = {NULL}, *tmp;
 
@@ -12,20 +7,14 @@ void run_sh_simulator(void) {
     _args[0] = (char *)malloc(strlen("init") + 1);
     strcpy(_args[0], "init");
 
+    /* Loop while first token isn't "exit" */
     while (strcmp(_args[0], "exit")) {
-        printf("arg[0]: %s\n", _args[0]);
-        printf("cmp: %d\n", strcmp(_args[0], "exit"));
         get_input(_input_line);
-        if (strcmp(_input_line, "")) {
-            printf("empty dawg");
-        }
-        printf("echo: %s\n", _input_line);
-        int n = tokenize(_args, _input_line), i;
-        printf("num args: %d\n", n);
-        for (i = 0; i < n; ++i) {
-            printf("%s\n", _args[i]);
+        if (strlen(_input_line) != 0) {
+            int n = tokenize(_args, _input_line), i;
         }
     }
+    /* Before exiting, make sure to clear token list. */
     clear_tok_list(_args);
     exit(1);
 }
