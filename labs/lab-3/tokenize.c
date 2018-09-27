@@ -19,7 +19,10 @@ int tokenize(char *tok_list[], char *input_line, char *delimiters) {
 }
 
 int clear_tok_list(char *tok_list[]) {
-    int i = 0;
+    clear_toks_after_i(tok_list, 0);    
+}
+
+int clear_toks_after_i(char *tok_list[], int i) {
     while (tok_list[i]) {
         free(tok_list[i]);
         tok_list[i++] = NULL;
