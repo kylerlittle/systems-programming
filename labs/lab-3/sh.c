@@ -9,7 +9,7 @@ char *cmds_by_pipe[MAX_PIPES + 1][MAX_ARGS];
 
 void execute_cmd(int myargc, char *myargv[], char* myenvp[]) {
     /* Check if cmd is simple and declare tokenized path array. */
-    int num_pipes = 0, pid;
+    int num_pipes = 0, pid, pd[2], status;
     char *_paths[MAX_PATHS] = {NULL};
 
     /* Get env variables HOME and PATH. */
@@ -21,35 +21,50 @@ void execute_cmd(int myargc, char *myargv[], char* myenvp[]) {
 
     /* First, check for pipes. */
     num_pipes = index_of_pipes(myargv, pipe_indices);
-    split_cmds_by_pipes(pipe_indices, num_pipes, myargv, cmds_by_pipe);
+    split_cmds_by_pipes(pipe_indices, num_pipes, myargv, myargc, cmds_by_pipe);
+
     if (num_pipes > 0) {
-        int pd[2];
+        print_cmds_by_pipe(cmds_by_pipe, num_pipes);
 
-        pipe(pd);        // creates a PIPE; pd[0] for READ  from the pipe, 
-                            //                 pd[1] for WRITE to   the pipe.
+        if (pipe(pd) != 0) fprintf(stderr, "creating pipe");
+        pid = fork();
+        switch(return_fork_code(pid)){
+            case ERROR_CODE:
+                fprintf(stderr, "exec() -- Forking a child process failed.\n");
+                break;
+            case CHILD_PROC:
+                // Child -- Let this guy be the pipe writer.
+                fprintf(stderr, "%d forked me; I am child %d -- execute_cmd()\n", getppid(), getpid());
 
-        pid = fork();    // fork a child process
-                            // child also has the same pd[0] and pd[1]
+                close(pd[0]);           // writer must close pipe reader
+                close(STDOUT);          // close stdout 
+                dup(pd[1]);             // replace stdout with pd[1] -- pipe writer
 
-        if (pid) {        // parent as pipe pipe WRITER
-            close(pd[0]); // WRITER MUST close pd[0]
+                /* Execute "head" */
+                if (DEBUG_MODE) print_cmd(cmds_by_pipe[0]);
+                exec(cmds_by_pipe[0], _paths, myenvp, true);
+                break;
+            case PARENT_PROC:
+                // Parent -- Let this guy be the pipe reader.
+                fprintf(stderr, "%d waiting for child -- execute_cmd() \n", getpid());
+                pid = wait(&status);
+                fprintf(stderr,"%d child proc died -- exit code = %d -- execute_cmd()\n", pid, status);
 
-            close(1);     // close 1
-            dup(pd[1]);   // replace 1 with pd[1]
-            close(pd[1]); // close pd[1] since it has replaced 1
-            exec(cmds_by_pipe[0], _paths, myenvp);   // change image to cmd1
-        }
-        else {            // child as pipe pipe READER
-            close(pd[1]); // READER MUST close pd[1]
+                close(pd[1]);           // reader must close pipe writer
+                close(STDIN);           // close stdin
+                dup(pd[0]);             // replace stdin with pd[0] -- pipe reader
 
-            close(0);  
-            dup(pd[0]);   // replace 0 with pd[0]
-            close(pd[0]); // close pd[0] since it has replaced 0
-            exec(cmds_by_pipe[1], _paths, myenvp);   // change image to cmd2
+                /* Execute "tail" -- could probably make a recursive call at this point
+                if I wanted to handle multiple pipes... but I can barely handle one pipe
+                at this point. */
+                if (DEBUG_MODE) print_cmd(cmds_by_pipe[1]);
+                exec(cmds_by_pipe[1], _paths, myenvp, true);
+                break;
         }
     }
     else {
-        exec(myargv, _paths, myenvp);
+        if (DEBUG_MODE) print_cmd(cmds_by_pipe[0]);
+        exec(cmds_by_pipe[0], _paths, myenvp, false);
     }
     /* Before exiting, make sure to clear token list. */
     clear_cmds_by_pipe(cmds_by_pipe, num_pipes);
@@ -155,10 +170,7 @@ int index_of_pipes(char *argv[], int pipe_indices[]) {
     return num_pipes;
 }
 
-// function to essentially tokenize the already tokenized argv
-// give pipe_indices, number of pipes, argv, and an array of char pointers
-// cmds_by_pipe should be an array of char ** or *char[]
-int split_cmds_by_pipes(int pipe_indices[], int num_pipes, char *argv[], char *cmds_by_pipe[][MAX_ARGS]) {
+int split_cmds_by_pipes(int pipe_indices[], int num_pipes, char *argv[], int argc, char *cmds_by_pipe[][MAX_ARGS]) {
     int i, left = 0, j, k;
 
     for (i = 0; i < num_pipes; ++i) {
@@ -176,9 +188,10 @@ int split_cmds_by_pipes(int pipe_indices[], int num_pipes, char *argv[], char *c
         left = pipe_indices[i] + 1;
     }
 
-    /* Grab the last group of commands after the last pipe. Yes this could be refactored. */
+    /* Grab the last group of commands after the last pipe. Yes this could be refactored. 
+    TODO -- refactor this shit. Too fucking tired rn. */
     k = 0;
-    for (j = left; argv[j] != NULL; ++j) {
+    for (j = left; j < argc; ++j) {
         /* For each tok, copy allocate new memory and copy argv[j] over. */
         cmds_by_pipe[i][k] = (char *)malloc(strlen(argv[j] + 1));
         strcpy(cmds_by_pipe[i][k++], argv[j]);
@@ -196,8 +209,8 @@ int clear_cmds_by_pipe(char *cmds_by_pipe[][MAX_ARGS], int num_pipes) {
     }
 }
 
-int exec(char *argv[], char *_paths[], char *envp[]) {
-    int index_of_simple_cmd = find_simple_cmd(argv[0]), child_status;
+int exec(char *argv[], char *_paths[], char *envp[], bool pipe_it_up) {
+    int index_of_simple_cmd = find_simple_cmd(argv[0]), child_status, exec_status, path_len, i;
 
     /* If cmd is a simple command, don't fork. Execute in current proc. */
     if (index_of_simple_cmd != ERROR_CODE) {
@@ -207,25 +220,27 @@ int exec(char *argv[], char *_paths[], char *envp[]) {
         int pid = fork();
         switch (return_fork_code(pid)) {
             case ERROR_CODE:
-                fprintf(stderr, "Forking a child process failed.\n");
+                fprintf(stderr, "exec() -- Forking a child process failed.\n");
                 break;
             case CHILD_PROC:
-                fprintf(stderr, "Inside Child Process pid=%d\n", getpid());
-
-                /* First, check for IO redirect operator. */
-                int io_redirect_index = index_of_io_redirect(argv), io_redirect_code;
-                if (io_redirect_index != ERROR_CODE) {
-                    /* Get io redirect code, and then handle the IO redirection. */
-                    io_redirect_code = get_io_redirect_code(argv[io_redirect_index]);
-                    io_redirect(io_redirect_code, argv[io_redirect_index + 1]);
-
-                    /* Clear toks after i to not confuse execve. */
-                    clear_toks_after_i(argv, io_redirect_index);
-                }
-                
-                int i = 0, path_len;
+                fprintf(stderr, "%d forked me; I am child %d -- exec()\n", getppid(), getpid());
                 char path_to_cmd[MAX_PATH_TO_CMD];
-                
+                i = 0;
+
+                /*
+                Some extra bullshit we're supposed to do first.
+                */
+                if (!strcmp(argv[0], "bash")) {
+                    char buf[256];
+                    FILE *fp;
+                    if ((fp = fopen(argv[1], "r"))) {
+                        fgets(buf, 256, fp);
+                        if (!strncmp(buf, "#!", 2)) {
+                            execve("/usr/bin/bash", argv, envp);
+                        }
+                    }
+                }
+
                 /* Loop while there are paths to check. */
                 while (_paths[i]) {
                     /* Make a copy of the path so we can add "/$(cmd)" to it without modifying it directly. */
@@ -238,18 +253,57 @@ int exec(char *argv[], char *_paths[], char *envp[]) {
                     if (DEBUG_MODE) fprintf(stderr, "Looking for %s at: %s\n", argv[0], path_to_cmd);
 
                     /* Attempt to execute the command. */
-                    execve(path_to_cmd, argv, envp);
-                    ++i;
+                    if (access(path_to_cmd, F_OK|X_OK) < 0) {
+                        ++i;
+                        continue;
+                    } else {
+                        /* First, check for IO redirect operator. */
+                        int io_redirect_index = index_of_io_redirect(argv), io_redirect_code;
+                        if (io_redirect_index != ERROR_CODE) {
+                            /* Get io redirect code, and then handle the IO redirection. */
+                            io_redirect_code = get_io_redirect_code(argv[io_redirect_index]);
+                            io_redirect(io_redirect_code, argv[io_redirect_index + 1]);
+
+                            /* Clear toks after i to not confuse execve. */
+                            clear_toks_after_i(argv, io_redirect_index);
+                        }
+                        break;
+                    }
                 }
-                /* If we make it here, the command's executable wasn't found. */
+                fprintf(stderr, "exec() -- args to child proc: ");
+                print_cmd(argv);
+                exec_status = execve(path_to_cmd, argv, envp);
+
+                /* If we make it here, the command's executable simply wasn't found. */
                 fprintf(stderr, "%s: command not found\n", argv[0]);
-                exit(100);
+                exit(exec_status);
                 break;
             case PARENT_PROC:
-                fprintf(stderr, "Inside Parent Process pid=%d\n", getpid());
+                fprintf(stderr, "%d waiting for child -- exec() \n", getpid());
                 pid = wait(&child_status);
-                fprintf(stderr, "Dead Child Process pid=%d exit_code=%04x\n", pid, child_status);
+                fprintf(stderr, "%d child proc died -- exit code = %d -- exec()\n", pid, child_status);
+                
+                /* HACK. Cannot for the life of me figure out how to maintain pipe life cycles. */
+                if (pipe_it_up) exit(0);
                 break;
         }
+    }    
+}
+
+void print_cmd(char *argv[]) {
+    int i = 0;
+    while (argv[i]) {
+        fprintf(stderr, "%s ", argv[i++]);
+    }
+    fprintf(stderr, "\n");
+}
+
+void print_cmds_by_pipe(char *cmds[][MAX_ARGS], int num_pipes) {
+    int m, n;
+    for (m = 0; m < num_pipes + 1; ++m) {
+        for (n = 0; cmds_by_pipe[m][n] != NULL; ++n) {
+            fprintf(stderr, "%s  ", cmds[m][n]);
+        }
+        fprintf(stderr, "\n");
     }
 }

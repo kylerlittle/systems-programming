@@ -42,8 +42,19 @@ void io_redirect(int code, char *filename);
 
 int index_of_pipes(char *argv[], int pipe_indices[]);
 
-int split_cmds_by_pipes(int pipe_indices[], int num_pipes, char *argv[], char *cmds_by_pipe[][MAX_ARGS]);
+/* Place each string from argv into an array of pointers to string arrays.
+   How? pipe_indices splits up argv and tells us which strings belong in which
+   slice of cmds_by_pipe.
+   @params:
+   pipe_indices -- array indices of each '|' in argv
+   num_pipes -- number of '|' tokens in argv
+   argc -- length of argv
+   cmds_by_pipe -- where to put copies of split up strings from argv
+*/
+int split_cmds_by_pipes(int pipe_indices[], int num_pipes, char *argv[], int argc, char *cmds_by_pipe[][MAX_ARGS]);
 int clear_cmds_by_pipe(char *cmds_by_pipe[][MAX_ARGS], int num_pipes);
-int exec(char *argv[], char *_paths[], char *envp[]);
+int exec(char *argv[], char *_paths[], char *envp[], bool pipe_it_up);
+void print_cmd(char *argv[]);
+void print_cmds_by_pipe(char *cmds[][MAX_ARGS], int num_pipes);
 
 #endif
