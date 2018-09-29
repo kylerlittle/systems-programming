@@ -12,6 +12,7 @@
 #include "constants.h"
 #include "tokenize.h"
 
+/* Global Variables */
 extern char *simple_cmd[];
 extern void (*simple_cmd_ptrs[])(char*);
 extern char HOME[];
@@ -19,13 +20,48 @@ extern char PATH[];
 extern int pipe_indices[];
 extern char *cmds_by_pipe[][MAX_ARGS];
 
-/* Function Signatures */
+/*********************** 
+ * Function Signatures 
+ ***********************/
+
+/* Overall execution function (calls exec). Can have pipes. 
+   @params
+   myargc -- argc from this program's command line
+   myargv -- argv from this program's command line
+   myenvp -- typical envp */
 void execute_cmd(int myargc, char *myargv[], char* myenvp[]);
+
+/* Return index of cmd in simple_cmd function pointer array. ERROR_CODE if not simple.
+   @params
+   cmd -- any linux command */
 int find_simple_cmd(char *cmd);
+
+/* Return fork code from pid
+   @params
+   pid -- ERROR_CODE | CHILD_PROC | PARENT_PROC */
 int return_fork_code(int pid);
+
+/* Change current working directory if path supplied, else go to $(HOME).
+   @params
+   path -- absolute/relative directory path to change sh to. */
 void my_cd(char *path);
+
+/* Prints an exiting message. Exiting actually handled by app.c. 
+   @params
+   path -- we completely ignore this supplied argument. */
 void my_exit(char *path);
+
+/* Return index of env_var in envp or ERROR_CODE if not found.
+   @params
+   env_var -- string to hopefully find
+   envp -- array of strings to search */
 int find_env_var(char *env_var, char *envp[]);
+
+/* Get string at envp[i]. Find value after "=" and place in dest.
+   @params
+   i -- index of envp to grab string
+   envp -- array of strings to extract from
+   dest -- dest char array to place result into */
 void get_env_var_val(int i, char *envp[], char *dest);
 
 /* Return the index of the io redirect operator in argv.
@@ -67,10 +103,23 @@ int split_cmds_by_pipes(int pipe_indices[], int num_pipes, char *argv[], int arg
    num_pipes -- number of '|' tokens in argv */
 int clear_cmds_by_pipe(char *cmds_by_pipe[][MAX_ARGS], int num_pipes);
 
+/* Executes a command with no pipes but possible io redirection. 
+   @params
+   argv -- argv from command line of this program
+   _paths -- tokenized $(PATH)
+   envp -- typical envp
+   pipe_it_up -- if true, kill process that called this function */
 int exec(char *argv[], char *_paths[], char *envp[], bool pipe_it_up);
 
+/* Debugging function to print a tokenized command 
+   @params
+   argv -- tokenized argv from command line of this program */
 void print_cmd(char *argv[]);
 
+/* Debugging function to print cmds_by_pipe
+   @params
+   cmds -- copies of split up strings from argv
+   num_pipes -- number of '|' tokens in argv */
 void print_cmds_by_pipe(char *cmds[][MAX_ARGS], int num_pipes);
 
 #endif

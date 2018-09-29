@@ -104,7 +104,9 @@ void my_cd(char *path) {
     chdir(path == NULL ? HOME : path);
 }
 
-void my_exit(char *path) {}
+void my_exit(char *path) {
+    printf("klittle sh proc %d exits\n", getpid());
+}
 
 int find_env_var(char *env_var, char *envp[]) {
     int i = 0, env_var_len = strlen(env_var);
