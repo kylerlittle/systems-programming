@@ -26,7 +26,7 @@ void execute_cmd(int myargc, char *myargv[], char* myenvp[]) {
     if (num_pipes > 0) {
         print_cmds_by_pipe(cmds_by_pipe, num_pipes);
 
-        if (pipe(pd) != 0) fprintf(stderr, "creating pipe");
+        if (pipe(pd) == 0) fprintf(stderr, "creating pipe");
         pid = fork();
         switch(return_fork_code(pid)){
             case ERROR_CODE:
@@ -58,7 +58,7 @@ void execute_cmd(int myargc, char *myargv[], char* myenvp[]) {
                 if I wanted to handle multiple pipes... but I can barely handle one pipe
                 at this point. */
                 if (DEBUG_MODE) print_cmd(cmds_by_pipe[1]);
-                exec(cmds_by_pipe[1], _paths, myenvp, true);
+                exec(cmds_by_pipe[1], _paths, myenvp, false);
                 break;
         }
     }
@@ -66,7 +66,11 @@ void execute_cmd(int myargc, char *myargv[], char* myenvp[]) {
         if (DEBUG_MODE) print_cmd(cmds_by_pipe[0]);
         exec(cmds_by_pipe[0], _paths, myenvp, false);
     }
-    /* Before exiting, make sure to clear token list. */
+    /* Before exiting, make sure to clear token lists, reset fd[] to stdin & stdout. ORDER MATTERS! */
+    close(pd[0]);
+    dup(STDIN);
+    close(pd[1]);
+    dup(STDOUT);
     clear_cmds_by_pipe(cmds_by_pipe, num_pipes);
     clear_tok_list(_paths);
 }
@@ -118,8 +122,7 @@ void get_env_var_val(int i, char *envp[], char *dest) {
 
     /* Now, get string after "=" character and copy to dest. */
     char *env_var = strtok(s, "=");
-    env_var = strtok(NULL, "=");
-    strcpy(dest, env_var);
+    strcpy(dest, strtok(NULL, "="));
 }
 
 int index_of_io_redirect(char *argv[]) {
@@ -142,7 +145,7 @@ void io_redirect(int code, char *filename) {
     switch (code) {
         case WRITE:
             close(STDOUT);
-            open(filename, O_WRONLY|O_CREAT, 0644);
+            open(filename, O_WRONLY|O_CREAT|O_TRUNC, 0644);
             break;
         case READ:
             close(STDIN);
@@ -203,9 +206,7 @@ int split_cmds_by_pipes(int pipe_indices[], int num_pipes, char *argv[], int arg
 int clear_cmds_by_pipe(char *cmds_by_pipe[][MAX_ARGS], int num_pipes) {
     int m, n;
     for (m = 0; m < num_pipes + 1; ++m) {
-        for (n = 0; cmds_by_pipe[m][n] != NULL; ++n) {
-            free(cmds_by_pipe[m][n]);
-        }
+        clear_tok_list(cmds_by_pipe[m]);  // leverage code reuse
     }
 }
 
@@ -272,6 +273,7 @@ int exec(char *argv[], char *_paths[], char *envp[], bool pipe_it_up) {
                 }
                 fprintf(stderr, "exec() -- args to child proc: ");
                 print_cmd(argv);
+                fprintf(stderr, "____________________________________________________________________________________________\n");
                 exec_status = execve(path_to_cmd, argv, envp);
 
                 /* If we make it here, the command's executable simply wasn't found. */
@@ -281,9 +283,10 @@ int exec(char *argv[], char *_paths[], char *envp[], bool pipe_it_up) {
             case PARENT_PROC:
                 fprintf(stderr, "%d waiting for child -- exec() \n", getpid());
                 pid = wait(&child_status);
+                fprintf(stderr, "____________________________________________________________________________________________\n");
                 fprintf(stderr, "%d child proc died -- exit code = %d -- exec()\n", pid, child_status);
                 
-                /* HACK. Cannot for the life of me figure out how to maintain pipe life cycles. */
+                /* Kill child writer if piping. */
                 if (pipe_it_up) exit(0);
                 break;
         }
@@ -302,7 +305,7 @@ void print_cmds_by_pipe(char *cmds[][MAX_ARGS], int num_pipes) {
     int m, n;
     for (m = 0; m < num_pipes + 1; ++m) {
         for (n = 0; cmds_by_pipe[m][n] != NULL; ++n) {
-            fprintf(stderr, "%s  ", cmds[m][n]);
+            fprintf(stderr, "%s ", cmds[m][n]);
         }
         fprintf(stderr, "\n");
     }

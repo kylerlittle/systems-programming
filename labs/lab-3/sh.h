@@ -27,6 +27,10 @@ void my_cd(char *path);
 void my_exit(char *path);
 int find_env_var(char *env_var, char *envp[]);
 void get_env_var_val(int i, char *envp[], char *dest);
+
+/* Return the index of the io redirect operator in argv.
+   @params:
+   argv -- array of pointers to character arrays; array terminates in NULL pointer. */
 int index_of_io_redirect(char *argv[]);
 
 /* Return the IO Redirect Macro based on string of redirection operator.
@@ -40,6 +44,10 @@ int get_io_redirect_code(char *io_redirect_op);
    filename -- filename to redirect stdout/stdin/stderr to */
 void io_redirect(int code, char *filename);
 
+/* Get indices of '|' strings in argv & place in pipe_indices.
+   @params
+   argv -- array of pointers to character arrays; array terminates in NULL pointer. 
+   pipe_indices -- array of integers to place indices into. */
 int index_of_pipes(char *argv[], int pipe_indices[]);
 
 /* Place each string from argv into an array of pointers to string arrays.
@@ -52,9 +60,14 @@ int index_of_pipes(char *argv[], int pipe_indices[]);
    cmds_by_pipe -- where to put copies of split up strings from argv
 */
 int split_cmds_by_pipes(int pipe_indices[], int num_pipes, char *argv[], int argc, char *cmds_by_pipe[][MAX_ARGS]);
+
+/* Clear t*/
 int clear_cmds_by_pipe(char *cmds_by_pipe[][MAX_ARGS], int num_pipes);
+
 int exec(char *argv[], char *_paths[], char *envp[], bool pipe_it_up);
+
 void print_cmd(char *argv[]);
+
 void print_cmds_by_pipe(char *cmds[][MAX_ARGS], int num_pipes);
 
 #endif

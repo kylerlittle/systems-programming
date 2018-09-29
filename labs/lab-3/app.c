@@ -1,8 +1,8 @@
 #include "app.h"
 
 void run_sh_simulator(char* envp[]) {
-    char _input_line[MAX_INPUT_LEN], *_args[MAX_ARGS] = {NULL}, *tmp;
-
+    char _input_line[MAX_INPUT_LEN], *_args[MAX_ARGS] = {NULL};
+    int i;
     /* Give first element a dummy value. */
     _args[0] = (char *)malloc(strlen("init") + 1);
     strcpy(_args[0], "init");
@@ -21,7 +21,7 @@ void run_sh_simulator(char* envp[]) {
 }
 
 int get_input(char *input_line) {
-    printf(">>");
+    printf("[klittle sh] : ");
     fgets(input_line, MAX_INPUT_LEN, stdin);
     input_line[strlen(input_line) - 1] = '\0';
 }
