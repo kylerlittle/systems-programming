@@ -61,7 +61,10 @@ int index_of_pipes(char *argv[], int pipe_indices[]);
 */
 int split_cmds_by_pipes(int pipe_indices[], int num_pipes, char *argv[], int argc, char *cmds_by_pipe[][MAX_ARGS]);
 
-/* Clear t*/
+/* Clear cmds_by_pipe since its memory is on the heap.
+   @params
+   cmds_by_pipe -- copies of split up strings from argv
+   num_pipes -- number of '|' tokens in argv */
 int clear_cmds_by_pipe(char *cmds_by_pipe[][MAX_ARGS], int num_pipes);
 
 int exec(char *argv[], char *_paths[], char *envp[], bool pipe_it_up);
