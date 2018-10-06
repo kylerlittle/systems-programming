@@ -7,6 +7,8 @@
 #include <string.h>      // for strcpy(), strcmp(), etc.
 #include <libgen.h>      // for basename(), dirname()
 #include <fcntl.h>       // for open(), close(), read(), write()
+#include <limits.h>      // for INT_MAX, INT_MIN, ...
+#include <stdbool.h>
 
 // for stat syscalls
 #include <sys/stat.h>
