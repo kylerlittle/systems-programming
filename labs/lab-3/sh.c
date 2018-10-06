@@ -58,6 +58,9 @@ void execute_cmd(int myargc, char *myargv[], char* myenvp[]) {
                 if I wanted to handle multiple pipes... but I can barely handle one pipe
                 at this point. */
                 if (DEBUG_MODE) print_cmd(cmds_by_pipe[1]);
+                // int newargc = 0;
+                // for (newargc = 0; cmds_by_pipe[1][newargc] != NULL; ++newargc);
+                // execute_cmd(newargc - pipe_indices[0] + 1, &myargv[pipe_indices[0] + 1], myenvp);
                 exec(cmds_by_pipe[1], _paths, myenvp, false);
                 break;
         }
