@@ -53,11 +53,11 @@ int myrcp(char *f1, char *f2)
         if (result == ERROR_CODE) { /* Doesn't exist, so make it, then recurse. */
             /* Use same permissions as f1. */
             if ((result = mkdir(f2, st1.st_mode)) == ERROR_CODE) {
-                printf("%s doesn't exist; tried to create directory and failed\n", f2);
+                printf("%s doesn't exist; tried to create it as directory and failed\n", f2);
                 exit(1);
             }
-    	    return cpd2d(f1, f2);        
         }
+        return cpd2d(f1, f2);
     }
 }
 
@@ -97,7 +97,7 @@ int cpf2f(char *f1, char *f2)
         write(fd2, buf, n);
         total += n;
     }
-    if (DEBUG_MODE) printf("%d bytes copied from %s to %s\n", total, f1, f2);
+    printf("%d bytes copied from %s to %s\n", total, f1, f2);
 
     close(fd1);
     close(fd2);
@@ -108,10 +108,11 @@ int cpf2d(char *f1, char *f2)
     char _basename[MAX_FILENAME_LEN], result[MAX_FILENAME_LEN], _slash[MAX_FILENAME_LEN] = "/";
 
     /* Get full file path -- f2/_basename. Store in result. */
-    strcpy(_basename, basename(f1));
-    strcpy(result, f2);
-    strcat(_slash,_basename);
-    strcat(result, _slash);
+    // strcpy(_basename, basename(f1));
+    // strcpy(result, f2);
+    // strcat(_slash,_basename);
+    // strcat(result, _slash);
+    f2slashbasef1(f1, f2, result);
     if (DEBUG_MODE) printf("Copying %s to %s\n", f1, result);
 
     /* Now, get file info of result, if it exists. */
@@ -135,5 +136,58 @@ int cpf2d(char *f1, char *f2)
 
 int cpd2d(char *f1, char *f2)
 {
-    // recursively cp dir into dir    
+    struct stat st1, st2;
+    int result, r1, r2;
+
+    /* First, we check if f2 dir exists. If not, create it. */    
+    if ((r2 = stat(f2, &st2)) == ERROR_CODE) {
+        r1 = stat(f1, &st1);   // we'll just assume this succeeds
+        if ((result = mkdir(f2, st1.st_mode)) == ERROR_CODE) {
+            printf("%s doesn't exist; tried to create it as directory and failed\n", f2);
+            exit(1);
+        }
+    }
+
+    /* Next, the algorithm should work as follows.
+     * For each file f in f1:
+     *      if f is a regular file, simply call cpf2d(f1/basename(f), f2)
+     *      if f is a directory, recurse -- cpd2d(f1/basename(f), f2/basename(f))
+     */
+    struct dirent *_dirent;
+    DIR * _dir;
+
+    _dir = opendir(f1);
+    while ((_dirent = readdir(_dir))) {
+        /* Concatenate f1 + '/' + filename and f2 + '/' + filename. */
+        char full_f1_path[MAX_FILENAME_LEN], full_f2_path[MAX_FILENAME_LEN];
+        f2slashbasef1(_dirent->d_name, f1, full_f1_path);
+        f2slashbasef1(_dirent->d_name, f2, full_f2_path);
+        if (DEBUG_MODE) printf("f1/basename(f): %s \t f2/basename(f): %s\n", full_f1_path, full_f2_path);
+
+        /* If f (i.e. f1/filename) is a regular file, simply call cpf2d. */
+        struct stat current_f_st;
+        result = stat(full_f1_path, &current_f_st);
+        /* If f (i.e. f1/filename) is a regular file, simply call cpf2d. */
+        if (S_ISREG(current_f_st.st_mode)) cpf2d(full_f1_path, f2);
+        /* If f (i.e. f1/filename) is a directory and NOT ".." or ".", recurse. */
+        // if (strncmp(_dirent->d_name, ".", 1)) printf("_dirent->name: %s\n", _dirent->d_name);
+        if (S_ISDIR(current_f_st.st_mode) && strncmp(_dirent->d_name, ".", 1)) cpd2d(full_f1_path, full_f2_path);
+        // if (result != ERROR_CODE) {
+        //     printf("mode is %d\n", current_f_st.st_mode);
+        // }
+        // printf("f->%s\n", _dirent->d_name);
+    }
+    closedir(_dir);
+}
+
+int f2slashbasef1(char *f1, char *f2, char *result) {
+    // char _basename[MAX_FILENAME_LEN], result[MAX_FILENAME_LEN], _slash[MAX_FILENAME_LEN] = "/";
+
+    // /* Get full file path -- f2/_basename. Store in result. */
+    // strcpy(_basename, basename(f1));
+    // strcpy(result, f2);
+    strcpy(result, f2);
+    strcat(result, "/");
+    strcat(result, basename(f1));
+    // strcat(result, _slash);
 }

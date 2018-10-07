@@ -2,7 +2,7 @@
 #define CONSTANTS
 
 /* Debugging Mode */
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 
 /* Macro -- Status Codes */
 #define ERROR_CODE -1

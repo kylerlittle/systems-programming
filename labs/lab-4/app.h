@@ -36,4 +36,7 @@ int cpf2d(char *f1, char *f2);
 /* Recursively copy dir f1 to dir f2. */
 int cpd2d(char *f1, char *f2);
 
+/* Copy "f2/basename(f1) into result. */
+int f2slashbasef1(char *f1, char *f2, char *result);
+
 #endif
