@@ -69,15 +69,20 @@ int cpf2f(char *f1, char *f2)
     int r1, r2, fd1, fd2 = INT_MAX, n, total = 0;
     char buf[BLOCK_SIZE];
 
-    /* Gotta use lstat here so we don't follow the links. */
-    r1 = lstat(f1, &st1);
-    r2 = lstat(f2, &st2);
+    /* Use stat here so we DO follow the links. */
+    r1 = stat(f1, &st1);
+    r2 = stat(f2, &st2);
 
     /* 1. Reject if f1 and f2 are the SAME file. */
     if (st1.st_ino == st2.st_ino && st1.st_dev == st2.st_dev) {
         printf("%s and %s are the same file\n", f1, f2);
         exit(1);
     }
+
+    /* Gotta use lstat now so we don't follow the links. */
+    r1 = lstat(f1, &st1);
+    r2 = lstat(f2, &st2);
+
     /* 2. Reject if f1 is a link and f2 exists */
     if (S_ISLNK(st1.st_mode) && r2 != ERROR_CODE) {
         printf("%s is link and %s exists\n", f1, f2);
@@ -85,6 +90,7 @@ int cpf2f(char *f1, char *f2)
     }
     /* 3. If f1 is a link and f2 does not exist: create link file f2 (SAME as f1). */
     if (S_ISLNK(st1.st_mode) && r2 == ERROR_CODE) {
+        printf("Creating symlink %s, which refers to what %s refers to.\n", f2, f1);
         return link(f1, f2);
     }
     /* OTHERWISE, open f1 for read, f2 for write (and overwrite). */
@@ -133,8 +139,31 @@ int cpd2d(char *f1, char *f2)
     int result, r1, r2;
     char actual_f2[MAX_FILENAME_LEN];
 
-    /* NOTE: Instead of f2, we want f2/f1. */
+    /* First, perform error checks. */
+    /* Check if files are the same. Only compare st_dev's because st_ino's are acting funky. */
+    r1 = stat(f1, &st1);
+    r2 = stat(f2, &st2);
+    if (st1.st_dev == st2.st_dev && st1.st_ino == st2.st_ino) {
+        printf("%s and %s are the same directory. Exiting.\n", f1, f2);
+        exit(10);
+    }
+    /* HACK -- Secondly, check if copying into a subdirectory. This won't work for all cases... */
+    char basedir[MAX_FILENAME_LEN];
+    strcpy(basedir, f2);
+    int i = 0, maybe_r2;
+    for (i = 0; basedir[i] != '/'; ++i);
+    basedir[i] = '\0';  // kill
+    struct stat maybe_st2;
+    if ((maybe_r2 = stat(basedir, &maybe_st2)) != ERROR_CODE) {
+        if (maybe_st2.st_dev == st1.st_dev && maybe_st2.st_ino == st1.st_ino) {
+            printf("Cannot copy into subdirectory\n");
+            exit(12);
+        }
+    }
+
+    /* Now... Instead of f2, we want f2/f1. */
     f2slashbasef1(f1, f2, actual_f2);
+    printf("ACTUAL F2: %s\n", actual_f2);
 
     /* First, we check if f2 dir exists. If not, create it. */    
     if ((r2 = stat(actual_f2, &st2)) == ERROR_CODE) {
@@ -142,6 +171,8 @@ int cpd2d(char *f1, char *f2)
         if ((result = mkdir(actual_f2, st1.st_mode)) == ERROR_CODE) {
             printf("%s doesn't exist; tried to create it as directory and failed\n", f2);
             exit(1);
+        } else {
+            printf("Created new directory: %s.\n", actual_f2);
         }
     }
 
@@ -159,7 +190,10 @@ int cpd2d(char *f1, char *f2)
         char full_f1_path[MAX_FILENAME_LEN], full_f2_path[MAX_FILENAME_LEN];
         f2slashbasef1(_dirent->d_name, f1, full_f1_path);
         f2slashbasef1(_dirent->d_name, actual_f2, full_f2_path);
-        if (DEBUG_MODE) printf("f1/basename(f): %s \t f2/basename(f): %s\n", full_f1_path, actual_f2);
+        if (DEBUG_MODE) {
+            printf("cp FILE to DIR will be called with: %s \t %s\n", full_f1_path, actual_f2);
+            printf("cp DIR to DIR will be called with: %s \t %s\n", full_f1_path, full_f2_path);
+        }
 
         /* If f (i.e. f1/filename) is a regular file, simply call cpf2d. */
         struct stat current_f_st;
