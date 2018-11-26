@@ -18,13 +18,13 @@ struct hostent *hp;
 
 int  mysock, client_sock;              // socket descriptors
 int  serverPort;                     // server port number
-int  r, length, n;                   // help variables
+int  r, length;                   // help variables
 
 extern CMD cmd_table[];
 char *cmd_argv[64];
 
 // Use these globals to manage what server should send back
-int server_response_size;
+int server_response_size, n;
 char server_response[4096];
 
 // Server initialization code:
@@ -95,8 +95,10 @@ main(int argc, char *argv[])
   else
     hostname = argv[1];
   
-  getcwd(cwd, MAX);       // set virtual cwd to cwd so client cannot go above this
+  getcwd(cwd, MAX);       
   server_init(hostname);
+  chroot(cwd); // NOT SECURE -- doesn't cover all bases: see http://man7.org/linux/man-pages/man2/chroot.2.html
+  printf("server: chroot to %s\n", cwd);
   
   // Try to accept a client request
   while(1){
@@ -128,7 +130,7 @@ main(int argc, char *argv[])
       printf("server: read  n=%d bytes; line=[%s]\n", n, line);
 
       /* Tokenize. */
-      int n = tokenize(cmd_argv, line, " ");
+      n = tokenize(cmd_argv, line, " ");
 
       /* Print off what was tokenized. */
       int i = 0;

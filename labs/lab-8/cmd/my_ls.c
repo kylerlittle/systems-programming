@@ -1,9 +1,7 @@
-/************* myls.c file **********/
 #include "my_ls.h"
-//struct stat mystat, *sp;
 
 // Use these globals to manage what server should send back
-int server_response_size, n = 0;
+int server_response_size, n;
 char server_response[4096];
 
 int ls_file(char *fname)
@@ -67,6 +65,7 @@ int ls_file(char *fname)
 }
 
 int my_ls(int myargc, char *myargv[]) {
+  n = 0;
   struct dirent *ep;
   DIR *dp=opendir(".");   // cwd
   if(myargv[0] != NULL){

@@ -9,6 +9,8 @@
 #include "cmd/my_rm.h"
 #include "cmd/my_cat.h"
 #include "cmd/my_cp.h"
+#include "cmd/my_cd.h"
+#include "cmd/my_pwd.h"
 #include <stdio.h>
 #include <string.h>
 

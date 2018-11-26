@@ -100,11 +100,10 @@ main(int argc, char *argv[ ])
    int total = 0, curr;
    while (total < message_size) {
       ans[0] = 0;
-      // strncpy(line, &server_response[total], MAX);
       curr = read(server_sock, ans, MAX);
       printf("%s", ans);
-      // curr = write(client_sock, line, MAX);
-      total += curr;
+      if (ans[MAX-1] == '\0') total += strlen(ans);
+      else total += curr;
    }
 
     // Read a line from sock and show it

@@ -13,7 +13,7 @@
 #include <dirent.h>
 
 // Use these globals to manage what server should send back
-extern int server_response_size;
+extern int server_response_size, n;
 extern char server_response[4096];
 
 int ls_file(char *fname);

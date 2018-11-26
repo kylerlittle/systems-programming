@@ -1,7 +1,7 @@
 /************* myls.c file **********/
 
-#ifndef __MYRM__
-#define __MYRM__
+#ifndef __MYCD__
+#define __MYCD__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,6 +16,6 @@
 extern int server_response_size, n;
 extern char server_response[4096];
 
-int my_rm(int myargc, char *myargv[]);
+int my_cd(int myargc, char *myargv[]);
 
 #endif

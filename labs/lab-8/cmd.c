@@ -7,6 +7,8 @@ CMD cmd_table[] = {
   {"rm",         &my_rm},
   {"cat",        &my_cat},
   {"cp",         &my_cp},
+  {"cd",         &my_cd},
+  {"pwd",        &my_pwd},
   {NULL,         NULL}
 };
 
