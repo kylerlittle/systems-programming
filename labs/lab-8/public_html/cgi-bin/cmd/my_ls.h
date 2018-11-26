@@ -1,0 +1,18 @@
+/************* myls.c file **********/
+
+#ifndef __MYLS__
+#define __MYLS__
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <sys/types.h>
+#include <dirent.h>
+
+int ls_file(char *fname);
+int my_ls(char *f1, char *f2);
+
+#endif
