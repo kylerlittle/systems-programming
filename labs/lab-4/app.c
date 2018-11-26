@@ -162,18 +162,22 @@ int cpd2d(char *f1, char *f2)
     }
 
     /* Now... Instead of f2, we want f2/f1. */
-    f2slashbasef1(f1, f2, actual_f2);
-    printf("ACTUAL F2: %s\n", actual_f2);
+    // f2slashbasef1(f1, f2, actual_f2);
+    // printf("ACTUAL F2: %s\n", actual_f2);
 
     /* First, we check if f2 dir exists. If not, create it. */    
-    if ((r2 = stat(actual_f2, &st2)) == ERROR_CODE) {
+    if ((r2 = stat(f2, &st2)) == ERROR_CODE) {
         r1 = stat(f1, &st1);   // it's very reasonable to assume this succeeds
-        if ((result = mkdir(actual_f2, st1.st_mode)) == ERROR_CODE) {
+        if ((result = mkdir(f2, st1.st_mode)) == ERROR_CODE) {
             printf("%s doesn't exist; tried to create it as directory and failed\n", f2);
             exit(1);
         } else {
-            printf("Created new directory: %s.\n", actual_f2);
+            printf("Created new directory: %s.\n", f2);
         }
+    } else { // f2 dir does exist, so make copy underneath  (set f2 = f2/f1)
+        f2slashbasef1(f1, f2, f2);
+        r1 = stat(f1, &st1);   // it's very reasonable to assume this succeeds
+        mkdir(f2, st1.st_mode);
     }
 
     /* Next, the algorithm should work as follows.
@@ -189,9 +193,9 @@ int cpd2d(char *f1, char *f2)
         /* Concatenate f1 + '/' + filename and f2 + '/' + filename. */
         char full_f1_path[MAX_FILENAME_LEN], full_f2_path[MAX_FILENAME_LEN];
         f2slashbasef1(_dirent->d_name, f1, full_f1_path);
-        f2slashbasef1(_dirent->d_name, actual_f2, full_f2_path);
+        f2slashbasef1(_dirent->d_name, f2, full_f2_path);
         if (DEBUG_MODE) {
-            printf("cp FILE to DIR will be called with: %s \t %s\n", full_f1_path, actual_f2);
+            printf("cp FILE to DIR will be called with: %s \t %s\n", full_f1_path, f2);
             printf("cp DIR to DIR will be called with: %s \t %s\n", full_f1_path, full_f2_path);
         }
 
@@ -199,10 +203,10 @@ int cpd2d(char *f1, char *f2)
         struct stat current_f_st;
         result = stat(full_f1_path, &current_f_st);
         /* If f (i.e. f1/filename) is a regular file, simply call cpf2d. */
-        if (S_ISREG(current_f_st.st_mode)) cpf2d(full_f1_path, actual_f2);
+        if (S_ISREG(current_f_st.st_mode)) cpf2d(full_f1_path, f2);
         /* If f (i.e. f1/filename) is a directory and NOT ".." or ".", recurse. */
         if (S_ISDIR(current_f_st.st_mode) && strcmp(_dirent->d_name, ".") && strcmp(_dirent->d_name, ".."))
-            cpd2d(full_f1_path, actual_f2);
+            cpd2d(full_f1_path, full_f2_path);
     }
     closedir(_dir);
 }
