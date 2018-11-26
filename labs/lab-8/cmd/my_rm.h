@@ -1,0 +1,17 @@
+/************* myls.c file **********/
+
+#ifndef __MYRM__
+#define __MYRM__
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <sys/types.h>
+#include <dirent.h>
+
+int my_rm(int myargc, char *myargv[]);
+
+#endif

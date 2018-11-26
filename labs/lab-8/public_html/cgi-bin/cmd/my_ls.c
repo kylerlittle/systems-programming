@@ -55,7 +55,11 @@ int my_ls(char *f1, char *f2) {
       dp=opendir(f1);
   }
   while((ep=readdir(dp))!=NULL) {
-    ls_file(ep->d_name);
+    char full_path[256];
+    strcpy(full_path, f1 ? f1 : ".");
+    strcat(full_path, "/");
+    strcat(full_path, ep->d_name);
+    ls_file(full_path);
   }
   printf("</br>");
 }

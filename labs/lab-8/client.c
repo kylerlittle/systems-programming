@@ -16,11 +16,11 @@ int server_sock, r;
 int SERVER_IP, SERVER_PORT; 
 
 
-// clinet initialization code
+// client initialization code
 
 int client_init(char *argv[])
 {
-  printf("======= clinet init ==========\n");
+  printf("======= client init ==========\n");
 
   printf("1 : get server info\n");
   hp = gethostbyname(argv[1]);
@@ -87,9 +87,29 @@ main(int argc, char *argv[ ])
     n = write(server_sock, line, MAX);
     printf("client: wrote n=%d bytes; line=(%s)\n", n, line);
 
-    // Read a line from sock and show it
+    // Read first line from sock (message size)
     n = read(server_sock, ans, MAX);
-    printf("client: read  n=%d bytes; echo=(%s)\n",n, ans);
+    int message_size = atoi(ans);
+    if (message_size <= 0) {
+       printf("server returned error code\n");
+       continue;  // error on server-size, so continue...
+    }
+    printf("expecting message with %d bytes\n", message_size);
+
+   /* Now, write the rest of the message in packets of size MAX. */
+   int total = 0, curr;
+   while (total < message_size) {
+      ans[0] = 0;
+      // strncpy(line, &server_response[total], MAX);
+      curr = read(server_sock, ans, MAX);
+      printf("%s", ans);
+      // curr = write(client_sock, line, MAX);
+      total += curr;
+   }
+
+    // Read a line from sock and show it
+   //  n = read(server_sock, ans, MAX);
+    printf("client: read total=%d bytes\n", total);
   }
 }
 
