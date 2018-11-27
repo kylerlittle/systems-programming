@@ -7,6 +7,7 @@
 #include <netdb.h>
 
 #include "util/tokenize.h"
+#include "lcmd.h"
 
 #define MAX 256
 #define CHUNK_SIZE 4096
@@ -18,6 +19,7 @@ struct sockaddr_in  server_addr;
 int server_sock, r;
 int SERVER_IP, SERVER_PORT; 
 
+extern LCMD lcmd_table[];
 char *l_cmd_argv[64];
 
 // Use these globals to manage what client should receive
@@ -103,6 +105,14 @@ main(int argc, char *argv[ ])
     
     /* Execute cmd on this side. Obviously, if cmd starts with 'l',
        simply 'continue' on loop after executing */
+    int index = get_cmd_index(l_cmd_argv[0]);
+      
+    /* Execute command if valid. Otherwise, don't do anything */
+    if (index != -1) {
+	    lcmd_table[index].command_as_function(n-1, &l_cmd_argv[1]);
+       clear_tok_list(l_cmd_argv);
+       continue;  // executed local command, no need to interact with server
+    }
 
     /* Ugly check for 'put' because tired. */   
     if (strcmp(l_cmd_argv[0], "put") == 0) {
