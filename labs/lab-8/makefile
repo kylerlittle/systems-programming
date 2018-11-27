@@ -5,7 +5,7 @@ CLIENT_BIN = client.bin
 SERVER_BIN = server.bin
 
 client:
-	$(COMPILER) -o $(CLIENT_BIN) $(C_FLAGS) client.c
+	$(COMPILER) -o $(CLIENT_BIN) $(C_FLAGS) util/*.c client.c
 
 server:
 	$(COMPILER) -o $(SERVER_BIN) $(C_FLAGS) util/*.c cmd/*.c cmd.c server.c

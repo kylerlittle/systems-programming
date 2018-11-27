@@ -11,6 +11,7 @@
 #include "cmd.h"
 
 #define  MAX 256
+#define ERROR 1000000
 
 // Define variables:
 struct sockaddr_in  server_addr, client_addr, name_addr;
@@ -26,6 +27,10 @@ char *cmd_argv[64];
 // Use these globals to manage what server should send back
 int server_response_size, n;
 char server_response[4096];
+
+// Use these globals to manage what server should receive
+int client_payload_size;
+char client_payload[4096];
 
 // Server initialization code:
 
@@ -89,19 +94,21 @@ main(int argc, char *argv[])
   char *hostname;
   char line[MAX];
   char cwd[MAX];
+  int curr, total;
   
   if (argc < 2)
     hostname = "localhost";
   else
     hostname = argv[1];
   
-  getcwd(cwd, MAX);       
+  char *blah = getcwd(cwd, MAX);       
   server_init(hostname);
   chroot(cwd); // NOT SECURE -- doesn't cover all bases: see http://man7.org/linux/man-pages/man2/chroot.2.html
   printf("server: chroot to %s\n", cwd);
+  fflush(stdout);
   
   // Try to accept a client request
-  while(1){
+  while(1) {
     printf("server: accepting new connection ....\n"); 
     
     // Try to accept a client connection as descriptor newsock
@@ -119,24 +126,53 @@ main(int argc, char *argv[])
     
     // Processing loop: newsock <----> client
     while(1) {
-      n = read(client_sock, line, MAX);
-      if (n==0) {
-	      printf("server: client died, server loops\n");
-	      close(client_sock);
-	      break;
-      }
+       memset(line, 0, MAX);                // zero out line[ ]
+      /******** READING FROM CLIENT *********
+       **************************************
+       * Client's messages will be of format:
+       *   sizeOfMessage (in bytes)
+       *   cmd arg1 arg2 ... argn
+       *   contents (if any)
+       **************************************/
       
-      // show the line string
-      printf("server: read  n=%d bytes; line=[%s]\n", n, line);
-
+      // First, read first line from sock (message size)
+      n = read(client_sock, line, MAX);
+      
+      if (n == 0) {
+        printf("server: client died, server loops\n");
+        close(client_sock);
+        break;
+      }
+      int message_size = atoi(line);
+      
+      // Second, receive cmd line
+      memset(line, 0, MAX);
+      n = read(client_sock, line, MAX);
+      printf("server: read n=%d bytes; ECHO=[%s]\n", n, line);
       /* Tokenize. */
       n = tokenize(cmd_argv, line, " ");
-
       /* Print off what was tokenized. */
       int i = 0;
       while (i < n) {
-         printf("argv[%d]=%s\n", i, cmd_argv[i]);
-         i++;
+	      printf("argv[%d]=%s\n", i, cmd_argv[i]);
+	      i++;
+      }
+
+      if (message_size == ERROR) {
+         printf("No additional content to collect\n");
+      } else {
+         printf("expecting message with %d bytes\n", message_size);
+
+         // Lastly, read the rest of the message in packets of size MAX.
+         total = 0;
+         while (total < message_size) {
+            memset(line, 0, MAX);
+            curr = read(client_sock, line, MAX);
+            memcpy(&client_payload[total], line, MAX);
+            if (line[MAX-1] == '\0') total += strlen(line);
+            else total += curr;
+            printf("server: read n=%d bytes; ECHO=\n%*.*s\n", total, 0, MAX, line);
+         }
       }
       
       /* Find the index of the command in the table. */
@@ -151,25 +187,33 @@ main(int argc, char *argv[])
       /* Clear command token list */
       clear_tok_list(cmd_argv);
 
+
+      /*********** SERVER WRITING ***********
+       **************************************
+       * Servers's messages will be of format:
+       *   sizeOfMessage (in bytes)
+       *   contents (if any)
+       **************************************/
+
       /* First, send server_response_size to client so they know what to expect */
-      line[0] = 0;
+      memset(line, 0, MAX);
       sprintf(line, "%d", server_response_size);
       n = write(client_sock, line, MAX);
       printf("server: notified client to expect message of %s bytes\n", line);
-
+      
       /* Now, write the rest of the message in packets of size MAX. */
-      int total = 0, curr;
+      total = 0;
       while (total < server_response_size) {
-         line[0] = 0;
-         strncpy(line, &server_response[total], MAX);
+         memset(line, 0, MAX);
+         memcpy(line, &server_response[total], MAX);
          curr = write(client_sock, line, MAX);
          if (line[MAX-1] == '\0') total += strlen(line);
          else total += curr;
-         printf("server: wrote n=%d bytes; ECHO=\n%s\n", total, line);
+         printf("server: wrote n=%d bytes; ECHO=\n%*.*s\n", total, 0, MAX, line);
       }
-
+      
       // Kill server_response for next iteration
-      server_response[0] = 0;
+      memset(server_response, 0, 4096);
       server_response_size = 0;
       
       printf("server: total bytes written: %d\n", total);
