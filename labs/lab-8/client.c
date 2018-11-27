@@ -9,6 +9,7 @@
 #include "util/tokenize.h"
 
 #define MAX 256
+#define CHUNK_SIZE 4096
 
 // Define variables
 struct hostent *hp;              
@@ -21,11 +22,11 @@ char *l_cmd_argv[64];
 
 // Use these globals to manage what client should receive
 int server_response_size;
-char server_response[4096];
+char server_response[CHUNK_SIZE];
 
 // Use these globals to manage what client should send
 int client_payload_size, n;
-char client_payload[4096];
+char client_payload[CHUNK_SIZE];
 
 // client initialization code
 
@@ -107,12 +108,12 @@ main(int argc, char *argv[ ])
     if (strcmp(l_cmd_argv[0], "put") == 0) {
        FILE *fp;
        int k;
-       char buf[4096];
+       char buf[CHUNK_SIZE];
 
        fp=fopen(l_cmd_argv[1],"r");
        if (fp) {
-          //4096 is the blksize
-          while(k=fread(buf,1,4096,fp)) {
+          //CHUNK_SIZE is the blksize
+          while(k=fread(buf,1,CHUNK_SIZE,fp)) {
              memcpy(client_payload, buf, k);
              client_payload_size+=k;
           }
@@ -192,7 +193,7 @@ main(int argc, char *argv[ ])
     clear_tok_list(l_cmd_argv);
 
     // Kill server_response for next iteration
-    memset(client_payload, 0, 4096);
+    memset(client_payload, 0, CHUNK_SIZE);
     client_payload_size = 0;
 
     printf("client: read total=%d bytes\n", total);

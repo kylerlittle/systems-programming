@@ -5,10 +5,10 @@ CLIENT_BIN = client.bin
 SERVER_BIN = server.bin
 
 client:
-	$(COMPILER) -o $(CLIENT_BIN) $(C_FLAGS) util/*.c client.c
+	$(COMPILER) -o $(CLIENT_BIN) $(C_FLAGS) util/*.[ch] client.c
 
 server:
-	$(COMPILER) -o $(SERVER_BIN) $(C_FLAGS) util/*.c cmd/*.c cmd.c server.c
+	$(COMPILER) -o $(SERVER_BIN) $(C_FLAGS) util/*.[ch] cmd/*.c cmd.c server.c
 
 both:
 	$(MAKE) client && $(MAKE) server

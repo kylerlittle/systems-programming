@@ -10,7 +10,8 @@
 #include "util/tokenize.h"
 #include "cmd.h"
 
-#define  MAX 256
+#define MAX 256
+#define CHUNK_SIZE 4096
 
 // Define variables:
 struct sockaddr_in  server_addr, client_addr, name_addr;
@@ -25,11 +26,11 @@ char *cmd_argv[64];
 
 // Use these globals to manage what server should send back
 int server_response_size, n;
-char server_response[4096];
+char server_response[CHUNK_SIZE];
 
 // Use these globals to manage what server should receive
 int client_payload_size;
-char client_payload[4096];
+char client_payload[CHUNK_SIZE];
 
 // Server initialization code:
 
@@ -212,7 +213,7 @@ main(int argc, char *argv[])
       }
       
       // Kill server_response for next iteration
-      memset(server_response, 0, 4096);
+      memset(server_response, 0, CHUNK_SIZE);
       server_response_size = 0;
       
       printf("server: total bytes written: %d\n", total);

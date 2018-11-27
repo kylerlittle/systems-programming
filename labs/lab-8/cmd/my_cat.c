@@ -2,7 +2,7 @@
 
 // Use these globals to manage what server should send back
 int server_response_size, n;
-char server_response[4096];
+char server_response[CHUNK_SIZE];
 
 int my_cat(int myargc, char *myargv[]) {
   n = 0;
