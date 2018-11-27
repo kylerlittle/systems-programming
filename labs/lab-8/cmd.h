@@ -11,6 +11,8 @@
 #include "cmd/my_cp.h"
 #include "cmd/my_cd.h"
 #include "cmd/my_pwd.h"
+#include "cmd/my_get.h"
+#include "cmd/my_put.h"
 #include <stdio.h>
 #include <string.h>
 

@@ -9,7 +9,6 @@
 #include "util/tokenize.h"
 
 #define MAX 256
-#define ERROR 1000000
 
 // Define variables
 struct hostent *hp;              
@@ -19,6 +18,10 @@ int server_sock, r;
 int SERVER_IP, SERVER_PORT; 
 
 char *l_cmd_argv[64];
+
+// Use these globals to manage what client should receive
+int server_response_size;
+char server_response[4096];
 
 // Use these globals to manage what client should send
 int client_payload_size, n;
@@ -88,19 +91,34 @@ main(int argc, char *argv[ ])
     fgets(line, MAX, stdin);         // get a line (end with \n) from stdin
 
     line[strlen(line)-1] = 0;        // kill \n at end
-    if (line[0]==0) exit(0); // exit if NULL line
+    if (line[0]==0) exit(0);         // exit if NULL line
    
-    client_payload_size = ERROR;  // give payload size an error value since likely won't have one
+    client_payload_size = 0; 
        
     /* Tokenize. */
-    n = tokenize(l_cmd_argv, line, " ");
+    char templine[MAX];
+    strcpy(templine, line);  // make copy so as not to trash line
+    n = tokenize(l_cmd_argv, templine, " ");
     
     /* Execute cmd on this side. Obviously, if cmd starts with 'l',
        simply 'continue' on loop after executing */
-    // TODO
-    
-    /* Clear command token list */
-    clear_tok_list(l_cmd_argv);
+
+    /* Ugly check for 'put' because tired. */   
+    if (strcmp(l_cmd_argv[0], "put") == 0) {
+       FILE *fp;
+       int k;
+       char buf[4096];
+
+       fp=fopen(l_cmd_argv[1],"r");
+       if (fp) {
+          //4096 is the blksize
+          while(k=fread(buf,1,4096,fp)) {
+             memcpy(client_payload, buf, k);
+             client_payload_size+=k;
+          }
+       }
+       fclose(fp);
+    }
     
     /********* CLIENT WRITING *************
      **************************************
@@ -122,15 +140,13 @@ main(int argc, char *argv[ ])
     
     // Lastly, write any extra contents if any.
     int total = 0, curr;
-    if (client_payload_size != ERROR) {
-      while (total < client_payload_size) {
-         memset(line, 0, MAX);
-         memcpy(line, &client_payload[total], MAX);
-         curr = write(server_sock, line, MAX);
-         if (line[MAX-1] == '\0') total += strlen(line);
-         else total += curr;
-         printf("client: wrote n=%d bytes; ECHO=\n%*.*s\n", total, 0, MAX, line);
-      }
+    while (total < client_payload_size) {
+       memset(line, 0, MAX);
+       memcpy(line, &client_payload[total], MAX);
+       curr = write(server_sock, line, MAX);
+       if (line[MAX-1] == '\0') total += strlen(line);
+       else total += curr;
+       printf("client: wrote n=%d bytes; ECHO=\n%*.*s\n", total, 0, MAX, line);
     }
 
     /******** READING FROM SERVER *********
@@ -142,22 +158,38 @@ main(int argc, char *argv[ ])
 
     // First, read first line from sock (message size)
     n = read(server_sock, ans, MAX);
-    int message_size = atoi(ans);
-    if (message_size <= 0) {
+    server_response_size = atoi(ans);
+    if (server_response_size <= 0) {
       printf("server returned error code\n");
       continue;  // error on server-size, so continue...
     }
-    printf("expecting message with %d bytes\n", message_size);
+    printf("expecting message with %d bytes\n", server_response_size);
     
     /* Next, read the rest of the message in packets of size MAX. */
     total = 0;
-    while (total < message_size) {
+    while (total < server_response_size) {
       memset(ans, 0, MAX);
       curr = read(server_sock, ans, MAX);
+      memcpy(&server_response[total], ans, MAX);
       printf("%*.*s", 0, MAX, ans);
       if (ans[MAX-1] == '\0') total += strlen(ans);
       else total += curr;
     }
+
+    /* Ugly check for 'get' because tired. */   
+    if (strcmp(l_cmd_argv[0], "put") == 0) {
+       FILE *fp;
+
+       fp=fopen(l_cmd_argv[1],"w");
+       if (fp) {
+          fwrite(server_response, 1, server_response_size, fp);
+          printf("Total bytes got from %s is: %d\n", l_cmd_argv[0], server_response_size);
+       }
+       fclose(fp);
+    }
+
+    /* Clear command token list */
+    clear_tok_list(l_cmd_argv);
 
     // Kill server_response for next iteration
     memset(client_payload, 0, 4096);

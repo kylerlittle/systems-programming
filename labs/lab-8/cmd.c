@@ -9,6 +9,8 @@ CMD cmd_table[] = {
   {"cp",         &my_cp},
   {"cd",         &my_cd},
   {"pwd",        &my_pwd},
+  {"get",        &my_get},
+  {"put",        &my_put},
   {NULL,         NULL}
 };
 

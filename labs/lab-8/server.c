@@ -11,7 +11,6 @@
 #include "cmd.h"
 
 #define  MAX 256
-#define ERROR 1000000
 
 // Define variables:
 struct sockaddr_in  server_addr, client_addr, name_addr;
@@ -143,14 +142,14 @@ main(int argc, char *argv[])
         close(client_sock);
         break;
       }
-      int message_size = atoi(line);
+      client_payload_size = atoi(line);
       
       // Second, receive cmd line
       memset(line, 0, MAX);
       n = read(client_sock, line, MAX);
       printf("server: read n=%d bytes; ECHO=[%s]\n", n, line);
       /* Tokenize. */
-      n = tokenize(cmd_argv, line, " ");
+      n = tokenize(cmd_argv, line, " ");  // NOTE -- line is garbage after this
       /* Print off what was tokenized. */
       int i = 0;
       while (i < n) {
@@ -158,14 +157,14 @@ main(int argc, char *argv[])
 	      i++;
       }
 
-      if (message_size == ERROR) {
+      if (client_payload_size == 0) {
          printf("No additional content to collect\n");
       } else {
-         printf("expecting message with %d bytes\n", message_size);
+         printf("expecting message with %d bytes\n", client_payload_size);
 
          // Lastly, read the rest of the message in packets of size MAX.
          total = 0;
-         while (total < message_size) {
+         while (total < client_payload_size) {
             memset(line, 0, MAX);
             curr = read(client_sock, line, MAX);
             memcpy(&client_payload[total], line, MAX);
