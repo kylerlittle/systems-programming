@@ -188,7 +188,7 @@ main(int argc, char *argv[ ])
     }
 
     /* Ugly check for 'get' because tired. */   
-    if (strcmp(l_cmd_argv[0], "put") == 0) {
+    if (strcmp(l_cmd_argv[0], "get") == 0) {
        FILE *fp;
 
        fp=fopen(l_cmd_argv[1],"w");
